@@ -48,6 +48,7 @@ struct Token {
 
 class Lexer {
 public:
+  Lexer() = default;
   Lexer(const std::string& input);
 
   const std::vector<Token>& run();
