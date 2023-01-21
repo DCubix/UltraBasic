@@ -4,23 +4,28 @@
 
 namespace ulang {
   Object op_add_number_number(const ArgList& args) {
-    return { ObjectType::number, getArg(double, 0) + getArg(double, 1) };
+    Object ob{ .type = ObjectType::number, .number = args[0].number + args[1].number };
+    return ob;
   }
 
   Object op_sub_number_number(const ArgList& args) {
-    return { ObjectType::number, getArg(double, 0) - getArg(double, 1) };
+    Object ob{ .type = ObjectType::number, .number = args[0].number - args[1].number };
+    return ob;
   }
 
   Object op_mul_number_number(const ArgList& args) {
-    return { ObjectType::number, getArg(double, 0) * getArg(double, 1) };
+    Object ob{ .type = ObjectType::number, .number = args[0].number * args[1].number };
+    return ob;
   }
 
   Object op_div_number_number(const ArgList& args) {
-    return { ObjectType::number, getArg(double, 0) / getArg(double, 1) };
+    Object ob{ .type = ObjectType::number, .number = args[0].number / args[1].number };
+    return ob;
   }
 
   Object op_pow_number_number(const ArgList& args) {
-    return { ObjectType::number, ::pow(getArg(double, 0), getArg(double, 1)) };
+    Object ob{ .type = ObjectType::number, .number = ::pow(args[0].number, args[1].number) };
+    return ob;
   }
 
   const std::vector<OperationDefinition> DefaultOperations::operationDefinitions = {

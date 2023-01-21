@@ -5,14 +5,29 @@
 #include "operation.h"
 
 namespace ulang {
-  struct make_string_functor {
-    std::string operator()(const std::string &x) const { return x; }
-    std::string operator()(double x) const { return std::to_string(x); }
-    std::string operator()(nullptr_t x) const { return "null"; }
-  };
+  size_t buintin_sin(VirtualMachine* vm) {
+    double param0 = vm->popNumber();
+    vm->pushNumber(::sin(param0));
+    return 1;
+  }
+
+  size_t buintin_cos(VirtualMachine* vm) {
+    double param0 = vm->popNumber();
+    vm->pushNumber(::cos(param0));
+    return 1;
+  }
 
   VirtualMachine::VirtualMachine(const Program &program) {
     m_program = program;
+
+    // initialize global scope with some functions and variables
+    Object obPi = { .type = ObjectType::number, .number = 3.141592654 };
+    Object obSin = { .type = ObjectType::function, .function = buintin_sin };
+    Object obCos = { .type = ObjectType::function, .function = buintin_cos };
+
+    m_globalScope->declare("pi", VariableType::immutableStorage, obPi);
+    m_globalScope->declare("sin", VariableType::immutableStorage, obSin);
+    m_globalScope->declare("cos", VariableType::immutableStorage, obCos);
   }
 
   void VirtualMachine::run() {
@@ -22,18 +37,37 @@ namespace ulang {
       switch (inst.opCode) {
         default: break;
         case OpCode::push: m_programStack.push(inst.object0); break;
-        case OpCode::addReg:
-        case OpCode::subReg:
-        case OpCode::mulReg:
-        case OpCode::divReg:
-        case OpCode::powReg: {
+        case OpCode::add:
+        case OpCode::sub:
+        case OpCode::mul:
+        case OpCode::div:
+        case OpCode::pow: {
           auto ob1 = m_programStack.top(); m_programStack.pop();
           auto ob0 = m_programStack.top(); m_programStack.pop();
           auto res = binaryOperation(ob0, ob1, inst.opCode);
           m_programStack.push(res);
         } break;
+        case OpCode::neg: {
+          auto ob = m_programStack.top(); m_programStack.pop();
+          if (ob.type != ObjectType::number) {
+            m_programStack.push({ ObjectType::null, nullptr });
+          } else {
+            m_programStack.push({ .type = ObjectType::number, .number = -ob.number });
+          }
+        } break;
         case OpCode::jump:
           // TODO: ...
+          break;
+        case OpCode::call:
+          auto str = popString();
+          auto var = m_globalScope->find(str);
+          // TODO: not found error
+
+          if (var.has_value()) {
+            auto&& val = var.value()->value;
+            if (val.type == ObjectType::function) val.function(this);
+            // TODO: not callable error
+          }
           break;
       }
     }
@@ -42,8 +76,41 @@ namespace ulang {
   void VirtualMachine::dumpStack() {
     while (!m_programStack.empty()) {
       auto ob = m_programStack.top(); m_programStack.pop();
-      std::cout << std::visit(make_string_functor(), ob.second) << std::endl;
+      // TODO: Dump it
     }
+  }
+
+  void VirtualMachine::pushNumber(double number) {
+    Object ob = { .type = ObjectType::number, .number = number };
+    m_programStack.push(ob);
+  }
+
+  double VirtualMachine::popNumber() {
+    auto ob = m_programStack.top(); m_programStack.pop();
+    if (ob.type != ObjectType::number) {
+      // TODO: Error handling
+      return 0.0;
+    }
+    return ob.number;
+  }
+
+  void VirtualMachine::pushString(const std::string &str) {
+    char* strData = new char[str.size()];
+    ::strcpy(strData, str.data());
+    // i know this is bad, but idk what else to use other than tagged unions :(
+    Object ob = { .type = ObjectType::string, .string = strData };
+    m_programStack.push(ob);
+  }
+
+  std::string VirtualMachine::popString() {
+    auto ob = m_programStack.top(); m_programStack.pop();
+    if (ob.type != ObjectType::string) {
+      // TODO: Error handling
+      return "";
+    }
+    std::string str(ob.string);
+    delete[] ob.string;
+    return str;
   }
 
   const Instruction& VirtualMachine::fetchNext() {
@@ -51,12 +118,12 @@ namespace ulang {
   }
 
   Object VirtualMachine::binaryOperation(Object a, Object b, OpCode opCode) {
-    if (a.first == ObjectType::null || b.first == ObjectType::null) {
+    if (a.type == ObjectType::null || b.type == ObjectType::null) {
       // TODO: Exception handling
       return { ObjectType::null, nullptr };
     }
 
-    if (a.first != b.first) {
+    if (a.type != b.type) {
       // TODO: Operators on different types
       return { ObjectType::null, nullptr };
     }
@@ -64,43 +131,43 @@ namespace ulang {
     Object ret{};
     switch (opCode) {
       default: break;
-      case OpCode::addReg: {
-        auto op = DefaultOperations::getOperation(Operator::add, { a.first, b.first });
+      case OpCode::add: {
+        auto op = DefaultOperations::getOperation(Operator::add, { a.type, b.type });
         if (!op.has_value()) {
           // TODO: Exception handling
-          return { ObjectType::null, nullptr };
+          return { .type = ObjectType::null, .null = nullptr };
         }
         ret = op.value().operation({ a, b });
       } break;
-      case OpCode::subReg: {
-        auto op = DefaultOperations::getOperation(Operator::sub, { a.first, b.first });
+      case OpCode::sub: {
+        auto op = DefaultOperations::getOperation(Operator::sub, { a.type, b.type });
         if (!op.has_value()) {
           // TODO: Exception handling
-          return { ObjectType::null, nullptr };
+          return { .type = ObjectType::null, .null = nullptr };
         }
         ret = op.value().operation({ a, b });
       } break;
-      case OpCode::mulReg: {
-        auto op = DefaultOperations::getOperation(Operator::mul, { a.first, b.first });
+      case OpCode::mul: {
+        auto op = DefaultOperations::getOperation(Operator::mul, { a.type, b.type });
         if (!op.has_value()) {
           // TODO: Exception handling
-          return { ObjectType::null, nullptr };
+          return { .type = ObjectType::null, .null = nullptr };
         }
         ret = op.value().operation({ a, b });
       } break;
-      case OpCode::divReg: {
-        auto op = DefaultOperations::getOperation(Operator::div, { a.first, b.first });
+      case OpCode::div: {
+        auto op = DefaultOperations::getOperation(Operator::div, { a.type, b.type });
         if (!op.has_value()) {
           // TODO: Exception handling
-          return { ObjectType::null, nullptr };
+          return { .type = ObjectType::null, .null = nullptr };
         }
         ret = op.value().operation({ a, b });
       } break;
-      case OpCode::powReg: {
-        auto op = DefaultOperations::getOperation(Operator::pow, { a.first, b.first });
+      case OpCode::pow: {
+        auto op = DefaultOperations::getOperation(Operator::pow, { a.type, b.type });
         if (!op.has_value()) {
           // TODO: Exception handling
-          return { ObjectType::null, nullptr };
+          return { .type = ObjectType::null, .null = nullptr };
         }
         ret = op.value().operation({ a, b });
       } break;

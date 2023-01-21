@@ -7,11 +7,9 @@
 
 #include "object.h"
 
-#define getArg(T, index) std::get<T>(stu::vec::at<Object>(args, index).second)
-
 namespace ulang {
 
-  using ArgList = std::initializer_list<Object>;
+  using ArgList = std::vector<Object>;
   using Operation = std::function<Object(const ArgList& args)>;
 
   enum class Operator : uint8_t {
