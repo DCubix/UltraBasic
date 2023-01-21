@@ -32,57 +32,59 @@ namespace ulang {
   Object VirtualMachine::binaryOperation(Object a, Object b, OpCode opCode) {
     if (a.first == ObjectType::null || b.first == ObjectType::null) {
       // TODO: Exception handling
-      return;
+      return { ObjectType::null, nullptr };
     }
 
     if (a.first != b.first) {
       // TODO: Operators on different types
-      return;
+      return { ObjectType::null, nullptr };
     }
 
     Object ret{};
     switch (opCode) {
       default: break;
       case OpCode::addReg: {
-        auto op = getOperation(Operator::add, { a.first, b.first });
+        auto op = DefaultOperations::getOperation(Operator::add, { a.first, b.first });
         if (!op.has_value()) {
           // TODO: Exception handling
-          return;
+          return { ObjectType::null, nullptr };
         }
         ret = op.value().operation({ a, b });
       } break;
       case OpCode::subReg: {
-        auto op = getOperation(Operator::sub, { a.first, b.first });
+        auto op = DefaultOperations::getOperation(Operator::sub, { a.first, b.first });
         if (!op.has_value()) {
           // TODO: Exception handling
-          return;
+          return { ObjectType::null, nullptr };
         }
         ret = op.value().operation({ a, b });
       } break;
       case OpCode::mulReg: {
-        auto op = getOperation(Operator::mul, { a.first, b.first });
+        auto op = DefaultOperations::getOperation(Operator::mul, { a.first, b.first });
         if (!op.has_value()) {
           // TODO: Exception handling
-          return;
+          return { ObjectType::null, nullptr };
         }
         ret = op.value().operation({ a, b });
       } break;
       case OpCode::divReg: {
-        auto op = getOperation(Operator::div, { a.first, b.first });
+        auto op = DefaultOperations::getOperation(Operator::div, { a.first, b.first });
         if (!op.has_value()) {
           // TODO: Exception handling
-          return;
+          return { ObjectType::null, nullptr };
         }
         ret = op.value().operation({ a, b });
       } break;
       case OpCode::powReg: {
-        auto op = getOperation(Operator::pow, { a.first, b.first });
+        auto op = DefaultOperations::getOperation(Operator::pow, { a.first, b.first });
         if (!op.has_value()) {
           // TODO: Exception handling
-          return;
+          return { ObjectType::null, nullptr };
         }
         ret = op.value().operation({ a, b });
       } break;
     }
+
+    return ret;
   }
 }

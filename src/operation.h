@@ -7,6 +7,8 @@
 
 #include "object.h"
 
+#define getArg(T, index) std::get<T>(stu::vec::at<Object>(args, index).second)
+
 namespace ulang {
 
   using ArgList = std::initializer_list<Object>;
@@ -27,7 +29,10 @@ namespace ulang {
     Operation operation;
   };
 
-  std::vector<OperationDefinition> operationDefinitions;
-  std::optional<OperationDefinition> getOperation(Operator op, std::initializer_list<ObjectType> argTypes);
+  class DefaultOperations {
+  public:
+    static const std::vector<OperationDefinition> operationDefinitions;
+    static std::optional<OperationDefinition> getOperation(Operator op, std::initializer_list<ObjectType> argTypes);
+  };
 
 } // namespace ulang

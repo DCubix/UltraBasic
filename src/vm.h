@@ -8,7 +8,7 @@
 
 namespace ulang {
 
-  constexpr size_t MaxRegisterCount = 8;
+  constexpr size_t MaxRegisterCount = 32;
 
   enum class OpCode : uint8_t {
     noOp = 0,
