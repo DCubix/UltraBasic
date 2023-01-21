@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
+#include <initializer_list>
 
 namespace stu {
 
@@ -20,6 +21,11 @@ namespace stu {
         accumulator = reducer(accumulator, vec[i]);
       }
       return accumulator;
+    }
+
+    template <typename T>
+    T at(const std::initializer_list<T>& vec, size_t index) {
+      return (*(vec.begin() + index));
     }
 
   }
