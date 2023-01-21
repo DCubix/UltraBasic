@@ -1,27 +1,48 @@
 #include "vm.h"
 
+#include <iostream>
+#include <string>
 #include "operation.h"
 
 namespace ulang {
+  struct make_string_functor {
+    std::string operator()(const std::string &x) const { return x; }
+    std::string operator()(double x) const { return std::to_string(x); }
+    std::string operator()(nullptr_t x) const { return "null"; }
+  };
+
+  VirtualMachine::VirtualMachine(const Program &program) {
+    m_program = program;
+  }
+
   void VirtualMachine::run() {
     while (m_pc < m_program.size()) {
       auto&& inst = fetchNext();
 
       switch (inst.opCode) {
         default: break;
-        case OpCode::moveImmReg: m_registers[inst.reg0] = inst.imm; break;
-        case OpCode::moveRegReg: m_registers[inst.reg0] = m_registers[inst.reg1]; break;
+        case OpCode::push: m_programStack.push(inst.object0); break;
         case OpCode::addReg:
         case OpCode::subReg:
         case OpCode::mulReg:
         case OpCode::divReg:
-        case OpCode::powReg:
-          m_registers[inst.reg0] = binaryOperation(m_registers[inst.reg0], m_registers[inst.reg1], inst.opCode);
-          break;
+        case OpCode::powReg: {
+          auto ob1 = m_programStack.top(); m_programStack.pop();
+          auto ob0 = m_programStack.top(); m_programStack.pop();
+          auto res = binaryOperation(ob0, ob1, inst.opCode);
+          m_programStack.push(res);
+        } break;
         case OpCode::jump:
-          m_pc = size_t(std::get<double>(inst.imm.second));
+          // TODO: ...
           break;
       }
+    }
+  }
+
+  void VirtualMachine::dumpStack() {
+    while (!m_programStack.empty()) {
+      auto ob = m_programStack.top(); m_programStack.pop();
+      std::cout << std::visit(make_string_functor(), ob.second) << std::endl;
     }
   }
 

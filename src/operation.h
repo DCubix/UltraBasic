@@ -25,7 +25,7 @@ namespace ulang {
 
   struct OperationDefinition {
     Operator op;
-    std::initializer_list<ObjectType> args;
+    std::vector<ObjectType> args;
     Operation operation;
   };
 

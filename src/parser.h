@@ -24,22 +24,11 @@ namespace ulang {
     bool containsOneOf(const std::initializer_list<TokenType>& types);
     bool expectOneOf(const std::initializer_list<TokenType>& types);
 
-    size_t allocRegister();
-    void releaseRegister(size_t reg);
-
     void parseAtom();
     void parsePow();
     void parseMulDiv();
     void parseAddSub();
     void parseExpr();
-
-    Object popTemp();
-    void pushMovFromTemp();
-
-    std::vector<size_t> m_availableRegisters;
-    std::vector<size_t> m_usedRegisters;
-
-    std::vector<Object> m_temporaryObjects;
   };
 
 } // namespace ulang

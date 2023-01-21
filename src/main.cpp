@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "parser.h"
+#include "vm.h"
 
 int main(int argc, char** argv) {
 
@@ -13,8 +14,12 @@ int main(int argc, char** argv) {
   }
   std::cout << std::endl;
 
-  ulang::Parser parser(tokens);
-  parser.parse();
+  ulang::Parser parser{tokens};
+  auto prog = parser.parse();
+
+  ulang::VirtualMachine vm{prog};
+  vm.run();
+  vm.dumpStack();
 
   return 0;
 }

@@ -32,10 +32,18 @@ namespace ulang {
   };
 
   std::optional<OperationDefinition> DefaultOperations::getOperation(Operator op, std::initializer_list<ObjectType> argTypes) {
-    auto pos = std::find_if(operationDefinitions.begin(), operationDefinitions.end(), [&](const OperationDefinition& od) {
-      bool equal = argTypes.size() == od.args.size() &&
-        std::equal(argTypes.begin(), argTypes.end(), od.args.begin(), od.args.end());
-      return od.op == op && equal;
+    auto pos = std::find_if(operationDefinitions.begin(), operationDefinitions.end(), [=](const OperationDefinition& od) {
+      if (argTypes.size() != od.args.size()) return false;
+
+      bool different = false;
+      for (size_t i = 0; i < argTypes.size(); i++) {
+        auto a1 = *(argTypes.begin() + i);
+        auto a2 = od.args[i];
+        if (a1 != a2) {
+          different = true;
+        }
+      }
+      return od.op == op && !different;
     });
     if (pos == operationDefinitions.end()) return {};
     return *pos;
