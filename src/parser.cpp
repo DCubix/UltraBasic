@@ -95,7 +95,7 @@ namespace ulang {
       Instruction pushFn = { .opCode = OpCode::push, .object0 = { ObjectType::string, ident } };
       
       if (containsOneOf({ TokenType::lParen }, false)) { // without advancing (function call)
-        parseUnaryMinus();
+        parseUnaryLogicNot();
 
         m_program.push_back(pushFn);
 
@@ -108,7 +108,7 @@ namespace ulang {
       }
        // TODO: Array access, member access
     } else {
-      parseUnaryMinus();
+      parseUnaryLogicNot();
     }
   }
 
@@ -127,6 +127,16 @@ namespace ulang {
     }
   }
 
+  void Parser::parseUnaryLogicNot() {
+    if (containsOneOf({ TokenType::logicalNot })) {
+      parseUnaryMinus();
+      Instruction neg = { .opCode = OpCode::logNot };
+      m_program.push_back(neg);
+    } else {
+      parseUnaryMinus();
+    }
+  }
+
   void Parser::parseUnaryMinus() {
     if (containsOneOf({ TokenType::minus })) {
       parsePow();
@@ -140,9 +150,11 @@ namespace ulang {
   void Parser::parsePow() {
     parseAtom(); // left
 
+    if (m_pos >= m_tokens.size()) return;
+
     // read the right side and push a POW instruction
     if (containsOneOf({ TokenType::power })) {
-      parseExpr();
+      parseMulDiv();
       Instruction pow = { .opCode = OpCode::pow };
       m_program.push_back(pow);
     } else {
@@ -164,11 +176,45 @@ namespace ulang {
   void Parser::parseAddSub() {
     if (containsOneOf({ TokenType::plus, TokenType::minus })) {
       auto op = previousToken().type;
-      parseExpr();
+      parseRelational();
       Instruction addsub = { .opCode = op == TokenType::plus ? OpCode::add : OpCode::sub };
       m_program.push_back(addsub);
     } else {
-      // TODO: Errors
+      parseRelational();
+    }
+  }
+
+  void Parser::parseRelational() {
+    if (containsOneOf({ TokenType::greater, TokenType::greaterEquals, TokenType::less, TokenType::lessEquals })) {
+      auto tok = previousToken().type;
+      parseEquality();
+      Instruction op{};
+      switch (tok) {
+        default: break;
+        case TokenType::greater: op.opCode = OpCode::logGt; break;
+        case TokenType::greaterEquals: op.opCode = OpCode::logGe; break;
+        case TokenType::less: op.opCode = OpCode::logLt; break;
+        case TokenType::lessEquals: op.opCode = OpCode::logLe; break;
+      }
+      m_program.push_back(op);
+    } else {
+      parseEquality();
+    }
+  }
+
+  void Parser::parseEquality() {
+    if (containsOneOf({ TokenType::equality, TokenType::difference })) {
+      auto tok = previousToken().type;
+      parseExpr();
+      Instruction op{};
+      switch (tok) {
+        default: break;
+        case TokenType::equality: op.opCode = OpCode::logEq; break;
+        case TokenType::difference: op.opCode = OpCode::logNe; break;
+      }
+      m_program.push_back(op);
+    } else {
+      parseExpr();
     }
   }
 

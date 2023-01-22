@@ -18,7 +18,14 @@ namespace ulang {
     mul,
     div,
     pow,
-    neg
+    neg,
+    eq,
+    neq,
+    grt,
+    geq,
+    lst,
+    leq,
+    logicNot
   };
 
   struct OperationDefinition {

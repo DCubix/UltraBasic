@@ -26,7 +26,15 @@ enum class TokenType : uint8_t {
 
   equals,
 
-  keyword
+  keyword,
+
+  greater,
+  less,
+  greaterEquals,
+  lessEquals,
+  equality,
+  difference,
+  logicalNot
 };
 
 const std::string tokenName[] = {
@@ -41,11 +49,20 @@ const std::string tokenName[] = {
   "divide",
   "power",
   "equals",
-  "keyword"
+  "keyword",
+  "greater",
+  "less",
+  "greaterEquals",
+  "lessEquals",
+  "equality",
+  "difference",
+  "logicalNot"
 };
 
 const std::string keywords[] = {
   "var", // variable declaration
+  "if",
+  "else",
   "true",
   "false"
 };

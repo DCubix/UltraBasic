@@ -27,10 +27,18 @@ namespace ulang {
     jump, // PC = imm
 
     call, // Call a function from the stack
-    
+
     varAccess,
     varDeclare,
-    varAssign
+    varAssign,
+
+    logEq,
+    logNe,
+    logGt,
+    logGe,
+    logLt,
+    logLe,
+    logNot
   };
 
   struct Instruction {

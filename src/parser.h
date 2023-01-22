@@ -31,10 +31,13 @@ namespace ulang {
     void parseVarDeclare();
     void parsePostfix();
     void parseAssignment();
+    void parseUnaryLogicNot();
     void parseUnaryMinus();
     void parsePow();
     void parseMulDiv();
     void parseAddSub();
+    void parseRelational(); // < > <= >=
+    void parseEquality(); // == != <>
     void parseExpr();
     
   };

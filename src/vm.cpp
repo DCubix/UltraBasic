@@ -8,6 +8,7 @@ namespace ulang {
   struct make_string_functor {
     std::string operator()(const std::string &x) const { return x; }
     std::string operator()(double x) const { return std::to_string(x); }
+    std::string operator()(bool x) const { return std::to_string(x); }
     std::string operator()(nullptr_t x) const { return "null"; }
     std::string operator()(UFunc x) const { return "UFunc"; }
   };
@@ -49,6 +50,12 @@ namespace ulang {
       switch (inst.opCode) {
         default: break;
         case OpCode::push: m_programStack.push_back(inst.object0); break;
+        case OpCode::logEq:
+        case OpCode::logNe:
+        case OpCode::logGt:
+        case OpCode::logLt:
+        case OpCode::logGe:
+        case OpCode::logLe:
         case OpCode::add:
         case OpCode::sub:
         case OpCode::mul:
@@ -65,6 +72,14 @@ namespace ulang {
             m_programStack.push_back({ ObjectType::null, nullptr });
           } else {
             m_programStack.push_back({ ObjectType::number, -std::get<double>(ob.second) });
+          }
+        } break;
+        case OpCode::logNot: {
+          auto ob = m_programStack.back(); m_programStack.pop_back();
+          if (ob.first != ObjectType::boolean) {
+            m_programStack.push_back({ ObjectType::null, nullptr });
+          } else {
+            m_programStack.push_back({ ObjectType::boolean, !std::get<bool>(ob.second) });
           }
         } break;
         case OpCode::jump:
@@ -159,62 +174,38 @@ namespace ulang {
     return m_program[m_pc++];
   }
 
+  static std::map<OpCode, Operator> opCodeOperatorMap = {
+    { OpCode::add, Operator::add },
+    { OpCode::sub, Operator::sub },
+    { OpCode::mul, Operator::mul },
+    { OpCode::div, Operator::div },
+    { OpCode::pow, Operator::pow },
+    { OpCode::logEq, Operator::eq },
+    { OpCode::logNe, Operator::neq },
+    { OpCode::logLt, Operator::lst },
+    { OpCode::logGt, Operator::grt },
+    { OpCode::logLe, Operator::leq },
+    { OpCode::logGe, Operator::geq }
+  };
+
   Object VirtualMachine::binaryOperation(Object& a, Object& b, OpCode opCode) {
     if (a.first == ObjectType::null || b.first == ObjectType::null) {
       // TODO: Exception handling
       return { ObjectType::null, nullptr };
     }
 
-    if (a.first != b.first) {
-      // TODO: Operators on different types
-      return { ObjectType::null, nullptr };
-    }
+    // if (a.first != b.first) {
+    //   // TODO: Operators on different types
+    //   return { ObjectType::null, nullptr };
+    // }
 
     Object ret{};
-    switch (opCode) {
-      default: break;
-      case OpCode::add: {
-        auto op = DefaultOperations::getOperation(Operator::add, { a.first, b.first });
-        if (!op.has_value()) {
-          // TODO: Exception handling
-          return { ObjectType::null, nullptr };
-        }
-        ret = op.value().operation({ &a, &b });
-      } break;
-      case OpCode::sub: {
-        auto op = DefaultOperations::getOperation(Operator::sub, { a.first, b.first });
-        if (!op.has_value()) {
-          // TODO: Exception handling
-          return { ObjectType::null, nullptr };
-        }
-        ret = op.value().operation({ &a, &b });
-      } break;
-      case OpCode::mul: {
-        auto op = DefaultOperations::getOperation(Operator::mul, { a.first, b.first });
-        if (!op.has_value()) {
-          // TODO: Exception handling
-          return { ObjectType::null, nullptr };
-        }
-        ret = op.value().operation({ &a, &b });
-      } break;
-      case OpCode::div: {
-        auto op = DefaultOperations::getOperation(Operator::div, { a.first, b.first });
-        if (!op.has_value()) {
-          // TODO: Exception handling
-          return { ObjectType::null, nullptr };
-        }
-        ret = op.value().operation({ &a, &b });
-      } break;
-      case OpCode::pow: {
-        auto op = DefaultOperations::getOperation(Operator::pow, { a.first, b.first });
-        if (!op.has_value()) {
-          // TODO: Exception handling
-          return { ObjectType::null, nullptr };
-        }
-        ret = op.value().operation({ &a, &b });
-      } break;
-    }
 
-    return ret;
+    auto op = DefaultOperations::getOperation(opCodeOperatorMap[opCode], { a.first, b.first });
+    if (!op.has_value()) {
+      // TODO: Exception handling
+      return { ObjectType::null, nullptr };
+    }
+    return op.value().operation({ &a, &b });
   }
 }

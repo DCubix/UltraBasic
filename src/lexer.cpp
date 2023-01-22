@@ -37,8 +37,40 @@ namespace ulang {
         pushToken(TokenType::power);
         sr.pop();
       } else if (ch == '=') {
-        pushToken(TokenType::equals);
         sr.pop();
+        if (sr.peek() == '=') {
+          sr.pop();
+          pushToken(TokenType::equality);
+        } else {
+          pushToken(TokenType::equals);
+        }
+      } else if (ch == '>') {
+        sr.pop();
+        if (sr.peek() == '=') {
+          sr.pop();
+          pushToken(TokenType::greaterEquals);
+        } else {
+          pushToken(TokenType::greater);
+        }
+      } else if (ch == '<') {
+        sr.pop();
+        if (sr.peek() == '=') {
+          sr.pop();
+          pushToken(TokenType::lessEquals);
+        } else if (sr.peek() == '>') {
+          sr.pop();
+          pushToken(TokenType::difference);
+        } else {
+          pushToken(TokenType::less);
+        }
+      } else if (ch == '!') {
+        sr.pop();
+        if (sr.peek() == '=') {
+          sr.pop();
+          pushToken(TokenType::difference);
+        } else {
+          pushToken(TokenType::logicalNot);
+        }
       } else { // other characters
         sr.pop();
       }
