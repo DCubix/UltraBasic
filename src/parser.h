@@ -25,10 +25,15 @@ namespace ulang {
     bool expectOneOf(const std::initializer_list<TokenType>& types);
 
     void parseAtom();
+
+    void parsePostfix();
+    void parseAssignment();
+    void parseUnaryMinus();
     void parsePow();
     void parseMulDiv();
     void parseAddSub();
     void parseExpr();
+    
   };
 
 } // namespace ulang

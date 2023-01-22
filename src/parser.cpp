@@ -39,30 +39,51 @@ namespace ulang {
     } else if (containsOneOf({ TokenType::lParen })) {
       parseExpr();
       expectOneOf({ TokenType::rParen });
-    } else if (containsOneOf({ TokenType::minus })) {
-      Instruction push = { .opCode = OpCode::push, .object0 = { ObjectType::number, std::stod(currentToken().lexeme) } };
-      m_program.push_back(push);
-      Instruction neg = { .opCode = OpCode::neg };
-      m_program.push_back(neg);
-    } else if (containsOneOf({ TokenType::identifier })) {
-      // Call functions/access variables
-      // if the next token is a lParen, it's a function
-      auto ident = previousToken().lexeme;
-      if (containsOneOf({ TokenType::lParen }, false)) { // without advancing
-        parseAtom();
+    } else {
+      // TODO: Error handling
+    }
+  }
 
-        Instruction pushFn = { .opCode = OpCode::push, .object0 = { ObjectType::string, ident } };
-        m_program.push_back(pushFn);
+  void Parser::parsePostfix() {
+    if (containsOneOf({ TokenType::identifier })) {
+      auto ident = previousToken().lexeme;
+      Instruction pushFn = { .opCode = OpCode::push, .object0 = { ObjectType::string, ident } };
+      m_program.push_back(pushFn);
+      
+      if (containsOneOf({ TokenType::lParen }, false)) { // without advancing (function call)
+        parseUnaryMinus();
+
         Instruction call = { .opCode = OpCode::call };
         m_program.push_back(call);
-      } else {
-        Instruction pushVar = { .opCode = OpCode::push, .object0 = { ObjectType::string, ident } };
-        m_program.push_back(pushVar);
+      } else if (containsOneOf({ TokenType::equals })) { // assignment
+        parseAssignment();
+      } else { // Variable access
         Instruction varAcc = { .opCode = OpCode::varAccess };
         m_program.push_back(varAcc);
       }
+       // TODO: Array access, member access
     } else {
-      // TODO: Error handling
+      parseUnaryMinus();
+    }
+  }
+
+  void Parser::parseAssignment() {
+    // we have parsed the identifier and equals symbols previously
+    // let's get the value now
+    parseExpr();
+
+    // now push the assignment instruction
+    Instruction varAssign = { .opCode = OpCode::varAssign };
+    m_program.push_back(varAssign);
+  }
+
+  void Parser::parseUnaryMinus() {
+    if (containsOneOf({ TokenType::minus })) {
+      parsePow();
+      Instruction neg = { .opCode = OpCode::neg };
+      m_program.push_back(neg);
+    } else {
+      parsePow();
     }
   }
 
@@ -102,7 +123,7 @@ namespace ulang {
   }
 
   void Parser::parseExpr() {
-    parsePow();
+    parsePostfix();
   }
 
 } // namespace ulang

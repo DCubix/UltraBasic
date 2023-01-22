@@ -84,6 +84,17 @@ namespace ulang {
             // TODO: not callable error
           }
         } break;
+        case OpCode::varAssign: {
+          auto value = m_programStack.top(); m_programStack.pop();
+          auto ident = popString();
+          auto varOp = m_globalScope->find(ident);
+          if (varOp.has_value()) {
+            varOp.value()->value = value;
+          } else {
+            // declare it :)
+            m_globalScope->declare(ident, VariableType::mutableStorage, value);
+          }
+        } break;
       }
     }
   }
@@ -127,7 +138,7 @@ namespace ulang {
     return m_program[m_pc++];
   }
 
-  Object VirtualMachine::binaryOperation(Object a, Object b, OpCode opCode) {
+  Object VirtualMachine::binaryOperation(Object& a, Object& b, OpCode opCode) {
     if (a.first == ObjectType::null || b.first == ObjectType::null) {
       // TODO: Exception handling
       return { ObjectType::null, nullptr };
@@ -147,7 +158,7 @@ namespace ulang {
           // TODO: Exception handling
           return { ObjectType::null, nullptr };
         }
-        ret = op.value().operation({ a, b });
+        ret = op.value().operation({ &a, &b });
       } break;
       case OpCode::sub: {
         auto op = DefaultOperations::getOperation(Operator::sub, { a.first, b.first });
@@ -155,7 +166,7 @@ namespace ulang {
           // TODO: Exception handling
           return { ObjectType::null, nullptr };
         }
-        ret = op.value().operation({ a, b });
+        ret = op.value().operation({ &a, &b });
       } break;
       case OpCode::mul: {
         auto op = DefaultOperations::getOperation(Operator::mul, { a.first, b.first });
@@ -163,7 +174,7 @@ namespace ulang {
           // TODO: Exception handling
           return { ObjectType::null, nullptr };
         }
-        ret = op.value().operation({ a, b });
+        ret = op.value().operation({ &a, &b });
       } break;
       case OpCode::div: {
         auto op = DefaultOperations::getOperation(Operator::div, { a.first, b.first });
@@ -171,7 +182,7 @@ namespace ulang {
           // TODO: Exception handling
           return { ObjectType::null, nullptr };
         }
-        ret = op.value().operation({ a, b });
+        ret = op.value().operation({ &a, &b });
       } break;
       case OpCode::pow: {
         auto op = DefaultOperations::getOperation(Operator::pow, { a.first, b.first });
@@ -179,7 +190,7 @@ namespace ulang {
           // TODO: Exception handling
           return { ObjectType::null, nullptr };
         }
-        ret = op.value().operation({ a, b });
+        ret = op.value().operation({ &a, &b });
       } break;
     }
 

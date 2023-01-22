@@ -9,7 +9,7 @@
 
 namespace ulang {
 
-  using ArgList = std::vector<Object>;
+  using ArgList = std::vector<Object*>;
   using Operation = std::function<Object(const ArgList& args)>;
 
   enum class Operator : uint8_t {

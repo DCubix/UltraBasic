@@ -4,23 +4,23 @@
 
 namespace ulang {
   Object op_add_number_number(const ArgList& args) {
-    return { ObjectType::number, std::get<double>(args[0].second) + std::get<double>(args[1].second) };
+    return { ObjectType::number, std::get<double>(args[0]->second) + std::get<double>(args[1]->second) };
   }
 
   Object op_sub_number_number(const ArgList& args) {
-    return { ObjectType::number, std::get<double>(args[0].second) - std::get<double>(args[1].second) };
+    return { ObjectType::number, std::get<double>(args[0]->second) - std::get<double>(args[1]->second) };
   }
 
   Object op_mul_number_number(const ArgList& args) {
-    return { ObjectType::number, std::get<double>(args[0].second) * std::get<double>(args[1].second) };
+    return { ObjectType::number, std::get<double>(args[0]->second) * std::get<double>(args[1]->second) };
   }
 
   Object op_div_number_number(const ArgList& args) {
-    return { ObjectType::number, std::get<double>(args[0].second) / std::get<double>(args[1].second) };
+    return { ObjectType::number, std::get<double>(args[0]->second) / std::get<double>(args[1]->second) };
   }
 
   Object op_pow_number_number(const ArgList& args) {
-    return { ObjectType::number, ::pow(std::get<double>(args[0].second), std::get<double>(args[1].second)) };
+    return { ObjectType::number, ::pow(std::get<double>(args[0]->second), std::get<double>(args[1]->second)) };
   }
 
   const std::vector<OperationDefinition> DefaultOperations::operationDefinitions = {

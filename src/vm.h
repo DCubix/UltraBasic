@@ -27,7 +27,8 @@ namespace ulang {
     jump, // PC = imm
 
     call, // Call a function from the stack
-    varAccess
+    varAccess,
+    varAssign
   };
 
   struct Instruction {
@@ -64,7 +65,7 @@ namespace ulang {
     size_t m_pc{ 0 };
 
     const Instruction& fetchNext();
-    Object binaryOperation(Object a, Object b, OpCode op);
+    Object binaryOperation(Object& a, Object& b, OpCode op);
 
   };
 
