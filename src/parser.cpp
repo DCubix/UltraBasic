@@ -53,6 +53,12 @@ namespace ulang {
     if (containsOneOf({ TokenType::number })) {
       Instruction push = { .opCode = OpCode::push, .object0 = { ObjectType::number, std::stod(previousToken().lexeme) } };
       m_program.push_back(push);
+    } else if (containsOneOf({ TokenType::keyword })) {
+      auto kw = previousToken().lexeme;
+      if (kw == "true" || kw == "false") {
+        Instruction boolInst = { .opCode = OpCode::push, .object0 = { ObjectType::boolean, kw == "true" ? true : false } };
+        m_program.push_back(boolInst);
+      }
     } else if (containsOneOf({ TokenType::lParen })) {
       parseExpr();
       expectOneOf({ TokenType::rParen });
@@ -92,7 +98,7 @@ namespace ulang {
         parseUnaryMinus();
 
         m_program.push_back(pushFn);
-        
+
         Instruction call = { .opCode = OpCode::call };
         m_program.push_back(call);
       } else { // Variable access

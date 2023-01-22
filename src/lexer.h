@@ -46,6 +46,8 @@ const std::string tokenName[] = {
 
 const std::string keywords[] = {
   "var", // variable declaration
+  "true",
+  "false"
 };
 
 struct Token {

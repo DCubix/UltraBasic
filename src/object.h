@@ -10,12 +10,13 @@ namespace ulang {
     null = 0,
     number,
     string,
+    boolean,
     function
     // more types in the future
   };
 
   using UFunc = size_t(*)(VirtualMachine*);
-  using Object = std::pair<ObjectType, std::variant<nullptr_t, double, std::string, UFunc>>;
+  using Object = std::pair<ObjectType, std::variant<nullptr_t, double, std::string, bool, UFunc>>;
  
   // struct Object {
   //   ObjectType type{ ObjectType::null };

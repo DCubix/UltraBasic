@@ -27,6 +27,7 @@ namespace ulang {
     jump, // PC = imm
 
     call, // Call a function from the stack
+    
     varAccess,
     varDeclare,
     varAssign
