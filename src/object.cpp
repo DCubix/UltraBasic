@@ -2,7 +2,7 @@
 
 namespace ulang {
   bool operator==(const Object &a, const Object &b) {
-    return a.type == b.type;
+    return a.first == b.first;
   }
 
 } // namespace ulang

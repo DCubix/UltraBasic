@@ -21,7 +21,7 @@ namespace ulang {
     const Token& previousToken() const { return m_tokens[m_pos-1 % m_tokens.size()]; }
     const Token& advance() { return m_tokens[m_pos++]; }
 
-    bool containsOneOf(const std::initializer_list<TokenType>& types);
+    bool containsOneOf(const std::initializer_list<TokenType>& types, bool allowAdvance = true);
     bool expectOneOf(const std::initializer_list<TokenType>& types);
 
     void parseAtom();

@@ -10,7 +10,7 @@ namespace ulang {
     return m_program;
   }
 
-  bool Parser::containsOneOf(const std::initializer_list<TokenType> &types) {
+  bool Parser::containsOneOf(const std::initializer_list<TokenType> &types, bool allowAdvance) {
     if (m_pos > m_tokens.size() - 1) return false;
 
     bool contains = false;
@@ -20,7 +20,7 @@ namespace ulang {
         break;
       }
     }
-    if (contains) advance();
+    if (contains && allowAdvance) advance();
     return contains;
   }
 
@@ -34,25 +34,33 @@ namespace ulang {
 
   void Parser::parseAtom() {
     if (containsOneOf({ TokenType::number })) {
-      Instruction push = { .opCode = OpCode::push, .object0 = { .type = ObjectType::number, .number = std::stod(previousToken().lexeme) } };
+      Instruction push = { .opCode = OpCode::push, .object0 = { ObjectType::number, std::stod(previousToken().lexeme) } };
       m_program.push_back(push);
     } else if (containsOneOf({ TokenType::lParen })) {
       parseExpr();
       expectOneOf({ TokenType::rParen });
     } else if (containsOneOf({ TokenType::minus })) {
-      Instruction push = { .opCode = OpCode::push, .object0 = { .type = ObjectType::number, .number = std::stod(currentToken().lexeme) } };
+      Instruction push = { .opCode = OpCode::push, .object0 = { ObjectType::number, std::stod(currentToken().lexeme) } };
       m_program.push_back(push);
-      Instruction neg = { .opCode = OpCode::neg, .object0 = Object() };
+      Instruction neg = { .opCode = OpCode::neg };
       m_program.push_back(neg);
     } else if (containsOneOf({ TokenType::identifier })) {
       // Call functions/access variables
-      auto&& str = previousToken().lexeme;
-      char* strData = new char[str.size()];
-      ::strcpy(strData, str.data());
-      Instruction pushFn = { .opCode = OpCode::push, .object0 = { .type = ObjectType::string, .string = strData } };
-      m_program.push_back(pushFn);
-      Instruction call = { .opCode = OpCode::call, .object0 = Object() };
-      m_program.push_back(call);
+      // if the next token is a lParen, it's a function
+      auto ident = previousToken().lexeme;
+      if (containsOneOf({ TokenType::lParen }, false)) { // without advancing
+        parseAtom();
+
+        Instruction pushFn = { .opCode = OpCode::push, .object0 = { ObjectType::string, ident } };
+        m_program.push_back(pushFn);
+        Instruction call = { .opCode = OpCode::call };
+        m_program.push_back(call);
+      } else {
+        Instruction pushVar = { .opCode = OpCode::push, .object0 = { ObjectType::string, ident } };
+        m_program.push_back(pushVar);
+        Instruction varAcc = { .opCode = OpCode::varAccess };
+        m_program.push_back(varAcc);
+      }
     } else {
       // TODO: Error handling
     }
@@ -64,7 +72,7 @@ namespace ulang {
     // read the right side and push a POW instruction
     if (containsOneOf({ TokenType::power })) {
       parseExpr();
-      Instruction pow = { .opCode = OpCode::pow, .object0 = Object() };
+      Instruction pow = { .opCode = OpCode::pow };
       m_program.push_back(pow);
     } else {
       parseMulDiv();
@@ -75,7 +83,7 @@ namespace ulang {
     if (containsOneOf({ TokenType::asterisk, TokenType::divide })) {
       auto op = previousToken().type;
       parseExpr();
-      Instruction muldiv = { .opCode = op == TokenType::asterisk ? OpCode::mul : OpCode::div, .object0 = Object() };
+      Instruction muldiv = { .opCode = op == TokenType::asterisk ? OpCode::mul : OpCode::div };
       m_program.push_back(muldiv);
     } else {
       parseAddSub();
@@ -86,7 +94,7 @@ namespace ulang {
     if (containsOneOf({ TokenType::plus, TokenType::minus })) {
       auto op = previousToken().type;
       parseExpr();
-      Instruction addsub = { .opCode = op == TokenType::plus ? OpCode::add : OpCode::sub, .object0 = Object() };
+      Instruction addsub = { .opCode = op == TokenType::plus ? OpCode::add : OpCode::sub };
       m_program.push_back(addsub);
     } else {
       // TODO: Errors

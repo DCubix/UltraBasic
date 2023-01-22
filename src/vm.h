@@ -4,6 +4,7 @@
 #include <vector>
 #include <stack>
 #include <functional>
+#include <map>
 
 #include "object.h"
 #include "scope.h"
@@ -25,7 +26,8 @@ namespace ulang {
 
     jump, // PC = imm
 
-    call // Call a function from the stack
+    call, // Call a function from the stack
+    varAccess
   };
 
   struct Instruction {
@@ -53,6 +55,8 @@ namespace ulang {
 
   private:
     std::shared_ptr<Scope> m_globalScope{};
+
+    std::map<size_t, std::string> m_strings;
 
     std::stack<Object> m_programStack;
     

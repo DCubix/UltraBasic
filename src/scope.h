@@ -23,13 +23,13 @@ namespace ulang {
 
   class Scope {
   public:
-    std::optional<Variable*> find(const std::string& name);
+    std::optional<std::shared_ptr<Variable>> find(const std::string& name);
     void declare(const std::string& name, const VariableType& varType, Object value);
     void inherit(const std::shared_ptr<Scope>& parent);
 
   private:
     std::shared_ptr<Scope> m_parent{ nullptr };
-    std::vector<std::unique_ptr<Variable>> m_variables;
+    std::vector<std::shared_ptr<Variable>> m_variables;
     std::vector<std::string> m_variableNames;
   };
 

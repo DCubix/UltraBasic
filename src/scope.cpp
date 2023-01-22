@@ -1,11 +1,11 @@
 #include "scope.h"
 
 namespace ulang {
-  std::optional<Variable*> Scope::find(const std::string &name) {
+  std::optional<std::shared_ptr<Variable>> Scope::find(const std::string &name) {
     auto pos = std::find(m_variableNames.begin(), m_variableNames.end(), name);
     if (pos != m_variableNames.end()) {
       auto index = std::distance(m_variableNames.begin(), pos);
-      return m_variables[index].get();
+      return m_variables[index];
     }
     if (m_parent) {
       return m_parent->find(name);
@@ -18,10 +18,11 @@ namespace ulang {
   }
 
   void Scope::declare(const std::string& name, const VariableType &varType, Object value) {
-    m_variables.emplace_back(std::make_unique<Variable>());
-    Variable* var = m_variables.back().get();
+    Variable* var = new Variable();
     var->type = varType;
     var->value = value;
+    m_variables.push_back(std::shared_ptr<Variable>(var));
     m_variableNames.push_back(name);
   }
+
 } // namespace ulang
