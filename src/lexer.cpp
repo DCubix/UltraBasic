@@ -51,7 +51,13 @@ namespace ulang {
     std::string ret = m_reader.popWhile([](char ch) {
       return ::isalnum(ch) || ch == '_';
     });
-    pushToken(TokenType::identifier, ret);
+    
+    auto kwPos = std::find(std::begin(keywords), std::end(keywords), ret);
+    if (kwPos != std::end(keywords)) {
+      pushToken(TokenType::keyword, ret);
+    } else {
+      pushToken(TokenType::identifier, ret);
+    }
   }
 
   void Lexer::readNumber() {

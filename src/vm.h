@@ -28,6 +28,7 @@ namespace ulang {
 
     call, // Call a function from the stack
     varAccess,
+    varDeclare,
     varAssign
   };
 
@@ -46,6 +47,8 @@ namespace ulang {
     void run();
     void dumpStack();
 
+    Object pop();
+
     void pushNumber(double number);
     double popNumber();
 
@@ -59,7 +62,7 @@ namespace ulang {
 
     std::map<size_t, std::string> m_strings;
 
-    std::stack<Object> m_programStack;
+    std::vector<Object> m_programStack;
     
     Program m_program;
     size_t m_pc{ 0 };

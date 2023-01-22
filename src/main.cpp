@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv) {
 
-  std::string input = "two_plus_two = 2 + 2";
+  std::string input = "print(pi * pi)";
   ulang::Lexer lex{input};
 
   auto tokens = lex.run();

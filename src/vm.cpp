@@ -24,6 +24,12 @@ namespace ulang {
     return 1;
   }
 
+  size_t buintin_print(VirtualMachine* vm) {
+    auto&& ob = vm->pop();
+    std::cout << std::visit(make_string_functor(), ob.second);
+    return 0;
+  }
+
   VirtualMachine::VirtualMachine(const Program &program) {
     m_program = program;
 
@@ -33,6 +39,7 @@ namespace ulang {
     m_globalScope->declare("pi", VariableType::immutableStorage, { ObjectType::number, 3.141592654 });
     m_globalScope->declare("sin", VariableType::immutableStorage, { ObjectType::function, buintin_sin });
     m_globalScope->declare("cos", VariableType::immutableStorage, { ObjectType::function, buintin_cos });
+    m_globalScope->declare("print", VariableType::immutableStorage, { ObjectType::function, buintin_print });
   }
 
   void VirtualMachine::run() {
@@ -41,23 +48,23 @@ namespace ulang {
 
       switch (inst.opCode) {
         default: break;
-        case OpCode::push: m_programStack.push(inst.object0); break;
+        case OpCode::push: m_programStack.push_back(inst.object0); break;
         case OpCode::add:
         case OpCode::sub:
         case OpCode::mul:
         case OpCode::div:
         case OpCode::pow: {
-          auto ob1 = m_programStack.top(); m_programStack.pop();
-          auto ob0 = m_programStack.top(); m_programStack.pop();
+          auto ob1 = m_programStack.back(); m_programStack.pop_back();
+          auto ob0 = m_programStack.back(); m_programStack.pop_back();
           auto res = binaryOperation(ob0, ob1, inst.opCode);
-          m_programStack.push(res);
+          m_programStack.push_back(res);
         } break;
         case OpCode::neg: {
-          auto ob = m_programStack.top(); m_programStack.pop();
+          auto ob = m_programStack.back(); m_programStack.pop_back();
           if (ob.first != ObjectType::number) {
-            m_programStack.push({ ObjectType::null, nullptr });
+            m_programStack.push_back({ ObjectType::null, nullptr });
           } else {
-            m_programStack.push({ ObjectType::number, -std::get<double>(ob.second) });
+            m_programStack.push_back({ ObjectType::number, -std::get<double>(ob.second) });
           }
         } break;
         case OpCode::jump:
@@ -67,7 +74,7 @@ namespace ulang {
           auto str = popString();
           auto var = m_globalScope->find(str);
           if (var.has_value()) {
-            m_programStack.push(var.value()->value);
+            m_programStack.push_back(var.value()->value);
           }
         } break;
         case OpCode::call: {
@@ -85,14 +92,23 @@ namespace ulang {
           }
         } break;
         case OpCode::varAssign: {
-          auto value = m_programStack.top(); m_programStack.pop();
+          auto value = m_programStack.back(); m_programStack.pop_back();
           auto ident = popString();
           auto varOp = m_globalScope->find(ident);
           if (varOp.has_value()) {
             varOp.value()->value = value;
           } else {
+            // TODO: variable not found
+          }
+        } break;
+        case OpCode::varDeclare: {
+          auto ident = popString();
+          auto varOp = m_globalScope->find(ident);
+          if (varOp.has_value()) {
+            // TODO: variable redefinition error
+          } else {
             // declare it :)
-            m_globalScope->declare(ident, VariableType::mutableStorage, value);
+            m_globalScope->declare(ident, VariableType::mutableStorage, { ObjectType::null, nullptr });
           }
         } break;
       }
@@ -101,18 +117,23 @@ namespace ulang {
 
   void VirtualMachine::dumpStack() {
     while (!m_programStack.empty()) {
-      auto ob = m_programStack.top(); m_programStack.pop();
+      auto ob = pop();
       std::cout << std::visit(make_string_functor(), ob.second) << std::endl;
     }
   }
 
+  Object VirtualMachine::pop() {
+    auto ob = m_programStack.back(); m_programStack.pop_back();
+    return ob;
+  }
+
   void VirtualMachine::pushNumber(double number) {
     Object ob = { ObjectType::number, number };
-    m_programStack.push(ob);
+    m_programStack.push_back(ob);
   }
 
   double VirtualMachine::popNumber() {
-    auto [ type, value ] = m_programStack.top(); m_programStack.pop();
+    auto [ type, value ] = pop();
     if (type != ObjectType::number) {
       // TODO: Error handling
       return 0.0;
@@ -122,11 +143,11 @@ namespace ulang {
 
   void VirtualMachine::pushString(const std::string &str) {
     Object ob = { ObjectType::string, str };
-    m_programStack.push(ob);
+    m_programStack.push_back(ob);
   }
 
   std::string VirtualMachine::popString() {
-    auto [ type, value ] = m_programStack.top(); m_programStack.pop();
+    auto [ type, value ] = pop();
     if (type != ObjectType::string) {
       // TODO: Error handling
       return "";

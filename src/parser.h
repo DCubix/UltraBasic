@@ -19,13 +19,16 @@ namespace ulang {
 
     const Token& currentToken() const { return m_tokens[m_pos]; }
     const Token& previousToken() const { return m_tokens[m_pos-1 % m_tokens.size()]; }
+    const Token& tokenAt(int offset = 0) const { return m_tokens[(m_pos + offset) % m_tokens.size()]; }
     const Token& advance() { return m_tokens[m_pos++]; }
 
     bool containsOneOf(const std::initializer_list<TokenType>& types, bool allowAdvance = true);
+    bool containsSequence(const std::initializer_list<TokenType>& types, bool allowAdvance = true);
     bool expectOneOf(const std::initializer_list<TokenType>& types);
 
     void parseAtom();
 
+    void parseVarDeclare();
     void parsePostfix();
     void parseAssignment();
     void parseUnaryMinus();

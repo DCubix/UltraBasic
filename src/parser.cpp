@@ -6,7 +6,7 @@ namespace ulang {
   }
 
   Program Parser::parse() {
-    parseExpr();
+    parseVarDeclare();
     return m_program;
   }
 
@@ -21,6 +21,23 @@ namespace ulang {
       }
     }
     if (contains && allowAdvance) advance();
+    return contains;
+  }
+
+  bool Parser::containsSequence(const std::initializer_list<TokenType> &types, bool allowAdvance) {
+    if (m_pos > m_tokens.size() - 1) return false;
+    bool contains = true;
+    for (size_t i = 0; i < types.size(); i++) {
+      if ((*(types.begin() + i)) != m_tokens[m_pos+i].type) {
+        contains = false;
+        break;
+      }
+    }
+    if (contains && allowAdvance) {
+      for (const auto& type : types) {
+        advance();
+      }
+    }
     return contains;
   }
 
@@ -44,20 +61,42 @@ namespace ulang {
     }
   }
 
+  void Parser::parseVarDeclare() {
+    if (containsOneOf({ TokenType::keyword }) && previousToken().lexeme == "var") {
+      Instruction ident = { .opCode = OpCode::push, .object0 = { ObjectType::string, currentToken().lexeme } };
+      m_program.push_back(ident);
+      advance();
+      
+      Instruction varDecl = { .opCode = OpCode::varDeclare };
+      m_program.push_back(varDecl);
+
+      if (containsOneOf({ TokenType::equals })) {
+        m_program.push_back(ident);
+
+        parseExpr();
+
+        Instruction varAssign = { .opCode = OpCode::varAssign };
+        m_program.push_back(varAssign);
+      }
+    } else {
+      parseAssignment();
+    }
+  }
+
   void Parser::parsePostfix() {
     if (containsOneOf({ TokenType::identifier })) {
       auto ident = previousToken().lexeme;
       Instruction pushFn = { .opCode = OpCode::push, .object0 = { ObjectType::string, ident } };
-      m_program.push_back(pushFn);
       
       if (containsOneOf({ TokenType::lParen }, false)) { // without advancing (function call)
         parseUnaryMinus();
 
+        m_program.push_back(pushFn);
+        
         Instruction call = { .opCode = OpCode::call };
         m_program.push_back(call);
-      } else if (containsOneOf({ TokenType::equals })) { // assignment
-        parseAssignment();
       } else { // Variable access
+        m_program.push_back(pushFn);
         Instruction varAcc = { .opCode = OpCode::varAccess };
         m_program.push_back(varAcc);
       }
@@ -68,13 +107,18 @@ namespace ulang {
   }
 
   void Parser::parseAssignment() {
-    // we have parsed the identifier and equals symbols previously
-    // let's get the value now
-    parseExpr();
+    if (containsSequence({ TokenType::identifier, TokenType::equals })) {
+      auto ident = tokenAt(-2).lexeme;
+      Instruction pushFn = { .opCode = OpCode::push, .object0 = { ObjectType::string, ident } };
+      m_program.push_back(pushFn);
 
-    // now push the assignment instruction
-    Instruction varAssign = { .opCode = OpCode::varAssign };
-    m_program.push_back(varAssign);
+      parseExpr();
+
+      Instruction varAssign = { .opCode = OpCode::varAssign };
+      m_program.push_back(varAssign);
+    } else {
+      parsePostfix();
+    }
   }
 
   void Parser::parseUnaryMinus() {

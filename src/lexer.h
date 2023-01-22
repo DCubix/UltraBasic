@@ -24,7 +24,9 @@ enum class TokenType : uint8_t {
   divide,
   power,
 
-  equals
+  equals,
+
+  keyword
 };
 
 const std::string tokenName[] = {
@@ -38,7 +40,12 @@ const std::string tokenName[] = {
   "asterisk",
   "divide",
   "power",
-  "equals"
+  "equals",
+  "keyword"
+};
+
+const std::string keywords[] = {
+  "var", // variable declaration
 };
 
 struct Token {
